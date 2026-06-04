@@ -1468,19 +1468,24 @@ let currentBase = 150;
 
 function generateBrojNaloga() {
   const min = 149;
-  const max = naloziData.reduce((m, n) => {
-    const raw = String(n.Title || '0');
-    // Extract just the first number from things like "150A, 150B" or "151"
-    const match = raw.match(/^(\d+)/);
-    const base = match ? parseInt(match[1]) : 0;
-    return isNaN(base) ? m : Math.max(m, base);
-  }, min);
+  let max = min;
+  naloziData.forEach(n => {
+    const raw = String(n.Title || '');
+    // Get first continuous digit sequence only
+    const match = raw.match(/^\s*(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > max) max = num;
+    }
+  });
   currentBase = max + 1;
   updateBrojNaloga(currentBase);
   return currentBase;
 }
 
 function updateBrojNaloga(base) {
+  // Always ensure base is a clean integer
+  const b = parseInt(String(base).match(/^\d+/)?.[0] || '150', 10);
   if (gorivoToggle) {
     document.getElementById('broj-naloga-display').textContent = '0';
     return;
@@ -1495,10 +1500,10 @@ function updateBrojNaloga(base) {
   const total = 1 + putnici;
 
   if (total === 1) {
-    document.getElementById('broj-naloga-display').textContent = String(base);
+    document.getElementById('broj-naloga-display').textContent = String(b);
   } else {
     const letters = ['A','B','C','D','E'];
-    const result = Array.from({length: total}, (_,i) => `${base}${letters[i]}`).join(', ');
+    const result = Array.from({length: total}, (_,i) => `${b}${letters[i]}`).join(', ');
     document.getElementById('broj-naloga-display').textContent = result;
   }
 }
