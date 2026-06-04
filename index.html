@@ -1558,7 +1558,7 @@ async function saveNalog() {
   const zapIme = zaposleniData.find(z => z.id === nosilac)?.Title || nosilac;
 
   const fields = {
-    'Broj_x0020_naloga': brojNaloga,
+    'Title': brojNaloga,
     'SIPANJE_x0020_GORIVA_x0020_BEZ_': gorivoToggle,
     'DatumPolaska': datumPolaska ? new Date(datumPolaska).toISOString() : null,
     'VremePolaska': document.getElementById('f-vreme-polaska').value || '-',
