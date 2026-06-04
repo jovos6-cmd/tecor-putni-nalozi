@@ -3,33 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#000300">
+<meta name="theme-color" content="#0d1117">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TECOR // PUTNI NALOZI</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>TECOR · Putni nalozi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
 <style>
 :root {
-  --bg: #000300;
-  --surface: #0a0f0a;
-  --surface2: #0f160f;
-  --surface3: #162016;
-  --border: rgba(0,255,65,0.1);
-  --border2: rgba(0,255,65,0.2);
-  --text: #c8ffc8;
-  --text2: #4dbb4d;
-  --text3: #2a6b2a;
-  --accent: #00cc41;
-  --accent2: #00ff41;
-  --accent-glow: rgba(0,255,65,0.2);
-  --green: #00ff41;
-  --red: #ff4444;
-  --yellow: #ffcc00;
-  --radius: 4px;
-  --radius-sm: 3px;
-  --font: 'Share Tech Mono', monospace;
-  --mono: 'Share Tech Mono', monospace;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2128;
+  --surface3: #252c37;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --accent: #1a5fa8;
+  --accent2: #4d9de0;
+  --accent-glow: rgba(26,95,168,0.25);
+  --green: #3fb950;
+  --red: #f85149;
+  --yellow: #d29922;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -164,7 +164,7 @@ html, body {
 /* ── HOME SCREEN ── */
 .home-hero {
   padding: 24px 20px 16px;
-  background: linear-gradient(180deg, rgba(0,255,65,0.05) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(26,95,168,0.08) 0%, transparent 100%);
 }
 .home-greeting {
   font-size: 13px;
@@ -718,9 +718,6 @@ html, body {
 <body>
 
 <div id="app">
-
-  <!-- MATRIX RAIN -->
-  <canvas id="matrix-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.35;pointer-events:none"></canvas>
 
   <!-- LOGIN -->
   <div id="login-screen" style="position:relative;z-index:1">
@@ -1582,7 +1579,7 @@ async function saveNalog() {
   const nosilac = document.getElementById('f-nosilac').value;
 
   if (!datumPolaska) { showToast('Datum polaska je obavezan!', 'error'); btn.textContent='Sačuvaj'; btn.disabled=false; return; }
-  if (!noilac && !nosilac) { /* ok */ }
+  
 
   const sipano = parseFloat(document.getElementById('f-sipano').value) || 0;
   const cenaGor = parseFloat(document.getElementById('f-cena-goriva').value) || 0;
@@ -1753,32 +1750,6 @@ function showToast(msg, type='') {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
-
-// ── MATRIX RAIN ──
-function initMatrix() {
-  const canvas = document.getElementById('matrix-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  const cols = Math.floor(canvas.width / 16);
-  const drops = Array(cols).fill(1);
-  const chars = 'TECOR01アイウエオカキクケコサシスセソタチツテト0123456789';
-  function draw() {
-    ctx.fillStyle = 'rgba(0,3,0,0.05)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#00ff41';
-    ctx.font = '14px Share Tech Mono, monospace';
-    drops.forEach((y, i) => {
-      const char = chars[Math.floor(Math.random() * chars.length)];
-      ctx.fillText(char, i * 16, y * 16);
-      if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-      drops[i]++;
-    });
-  }
-  setInterval(draw, 50);
-}
-initMatrix();
 
 // ── PDF LABEL ──
 function updatePdfLabel(input) {
