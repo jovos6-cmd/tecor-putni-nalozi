@@ -1363,7 +1363,7 @@ function nalogCard(n) {
   const nosilac = getNalogNasilac(n);
   const dest = n.Destinacija || '—';
   const datum = formatDate(n.DatumPolaska);
-  const isGorivo = n['SIPANJE_x0020_GORIVA_x0020_BEZ_'] || n['SIPANJEGORIVABEZPUTAValue'] || false;
+  const isGorivo = n['Sipanjegoriva'] || false;
   return `<div class="list-item" onclick="showDetalji('${n.id}')">
     <div class="list-item-icon">${isGorivo ? '⛽' : '🚗'}</div>
     <div class="list-item-body">
@@ -1542,16 +1542,7 @@ function calcPotrosnja() {
   const voziloId = document.getElementById('f-vozilo').value;
   const vozilo = vozilaData.find(v => v.id === voziloId);
   // Try all possible SharePoint internal field names for 'Prosecna potrosnja'
-  const pp = vozilo ? parseFloat(
-    vozilo['Prose_x010d_napotrošnja'] ||
-    vozilo['Prose_x010d_naPotro_x0161_nja'] ||
-    vozilo['ProsecnaPotrošnja'] ||
-    vozilo['Prose_x010d_naPotro_x161_nja'] ||
-    vozilo['ProsecnaPotrosnja'] ||
-    vozilo['field_3'] ||
-    Object.values(vozilo).find(v => typeof v === 'number' && v > 0 && v < 50) ||
-    0
-  ) : 0;
+  const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotro_x0161_nja'] || 0) : 0;
   const potrosnja = km * pp / 100;
   document.getElementById('calc-potrosnja').textContent = potrosnja.toLocaleString('sr-RS', {minimumFractionDigits:2}) + ' L';
 }
