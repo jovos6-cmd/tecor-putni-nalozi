@@ -894,19 +894,19 @@ html, body {
 
           <div class="form-group trip-only">
             <div class="form-label">Putnik 2</div>
-            <select class="form-select" id="f-putnik2"><option value="">—</option></select>
+            <select class="form-select" id="f-putnik2" onchange="updateBrojNaloga(currentBase)"><option value="">—</option></select>
           </div>
           <div class="form-group trip-only">
             <div class="form-label">Putnik 3</div>
-            <select class="form-select" id="f-putnik3"><option value="">—</option></select>
+            <select class="form-select" id="f-putnik3" onchange="updateBrojNaloga(currentBase)"><option value="">—</option></select>
           </div>
           <div class="form-group trip-only">
             <div class="form-label">Putnik 4</div>
-            <select class="form-select" id="f-putnik4"><option value="">—</option></select>
+            <select class="form-select" id="f-putnik4" onchange="updateBrojNaloga(currentBase)"><option value="">—</option></select>
           </div>
           <div class="form-group trip-only">
             <div class="form-label">Putnik 5</div>
-            <select class="form-select" id="f-putnik5"><option value="">—</option></select>
+            <select class="form-select" id="f-putnik5" onchange="updateBrojNaloga(currentBase)"><option value="">—</option></select>
           </div>
 
           <!-- DESTINACIJA (trip only) -->
@@ -1447,17 +1447,45 @@ function toggleGorivo() {
   });
 
   // Broj naloga
-  document.getElementById('broj-naloga-display').textContent = gorivoToggle ? '0' : generateBrojNaloga();
+  document.getElementById('broj-naloga-display').textContent = gorivoToggle ? '0' : (updateBrojNaloga(currentBase), document.getElementById('broj-naloga-display').textContent);
 }
 
+let currentBase = 150;
+
 function generateBrojNaloga() {
+  const min = 149; // start from 150
   const max = naloziData.reduce((m, n) => {
-    const b = parseInt(n['Broj_x0020_naloga'] || n.BrojNaloga || n.Title || '0');
-    return isNaN(b) ? m : Math.max(m, b);
-  }, 0);
-  const next = String(max + 1);
-  document.getElementById('broj-naloga-display').textContent = next;
-  return next;
+    const raw = n['Broj_x0020_naloga'] || n.BrojNaloga || n.Title || '0';
+    const base = parseInt(raw.toString().replace(/[^0-9]/g, ''));
+    return isNaN(base) ? m : Math.max(m, base);
+  }, min);
+  currentBase = max + 1;
+  updateBrojNaloga(currentBase);
+  return currentBase;
+}
+
+function updateBrojNaloga(base) {
+  if (gorivoToggle) {
+    document.getElementById('broj-naloga-display').textContent = '0';
+    return;
+  }
+  // Count putnici
+  const putnici = [
+    document.getElementById('f-putnik2')?.value,
+    document.getElementById('f-putnik3')?.value,
+    document.getElementById('f-putnik4')?.value,
+    document.getElementById('f-putnik5')?.value,
+  ].filter(v => v && v !== '' && v !== '-').length;
+
+  const total = 1 + putnici; // nosilac + ostali
+
+  if (total === 1) {
+    document.getElementById('broj-naloga-display').textContent = String(base);
+  } else {
+    const letters = ['A','B','C','D','E'];
+    const numbers = Array.from({length: total}, (_,i) => `${base}${letters[i]}`);
+    document.getElementById('broj-naloga-display').textContent = numbers.join(', ');
+  }
 }
 
 function autoFillVozilo() {
