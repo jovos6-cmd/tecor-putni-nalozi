@@ -892,7 +892,7 @@ html, body {
 
           <div class="form-group trip-only">
             <div class="form-label">Vozilo</div>
-            <select class="form-select" id="f-vozilo" onchange="calcPotrosnja()">
+            <select class="form-select" id="f-vozilo" >
               <option value="">— Izaberi —</option>
             </select>
           </div>
@@ -938,13 +938,9 @@ html, body {
           </div>
           <div class="form-group trip-only">
             <div class="form-label">Pređeno kilometara</div>
-            <input type="number" class="form-input" id="f-km" placeholder="0" min="0" oninput="calcPotrosnja()">
+            <input type="number" class="form-input" id="f-km" placeholder="0" min="0" >
           </div>
-          <div class="form-group trip-only">
-            <div class="form-label">Potrošeno goriva (L)</div>
-            <div class="form-calc" id="calc-potrosnja">0.00 L</div>
-            <div class="form-calc-label">Automatski: km × prosečna potrošnja vozila</div>
-          </div>
+
 
           <!-- GORIVO -->
           <div class="form-section"><div class="form-section-title">Gorivo</div></div>
@@ -1243,10 +1239,7 @@ async function loadReferenceData() {
     });
 
     generateBrojNaloga();
-    // Debug: log vozila fields to find correct field name
-    if (vozilaData.length > 0) {
-      console.log('Vozilo fields:', JSON.stringify(vozilaData[0]));
-    }
+
   } catch(e) {
     console.error('Greška pri učitavanju referentnih podataka:', e);
   }
@@ -1519,8 +1512,7 @@ function autoFillVozilo() {
       const vozilo = vozilaData.find(v => v.Vozilo === vozTitle || v.Title === vozTitle);
       if (vozilo) {
         document.getElementById('f-vozilo').value = vozilo.id;
-        calcPotrosnja();
-      }
+            }
     }
   }
 }
@@ -1531,15 +1523,6 @@ function calcPlaceno() {
   document.getElementById('calc-placeno').textContent = (s*c).toLocaleString('sr-RS', {minimumFractionDigits:2}) + ' RSD';
 }
 
-function calcPotrosnja() {
-  const km = parseFloat(document.getElementById('f-km').value) || 0;
-  const voziloId = document.getElementById('f-vozilo').value;
-  const vozilo = vozilaData.find(v => v.id === voziloId);
-  // Try all possible SharePoint internal field names for 'Prosecna potrosnja'
-  const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotro_x0161_nja'] || vozilo['ProsecnaPotrošnja'] || 0) : 0;
-  const potrosnja = km * pp / 100;
-  document.getElementById('calc-potrosnja').textContent = potrosnja.toLocaleString('sr-RS', {minimumFractionDigits:2}) + ' L';
-}
 
 function resetForm() {
   gorivoToggle = false;
@@ -1552,7 +1535,6 @@ function resetForm() {
     else el.value = '';
   });
   document.getElementById('calc-placeno').textContent = '0.00 RSD';
-  document.getElementById('calc-potrosnja').textContent = '0.00 L';
   currentNalogId = null;
   document.querySelector('#screen-novi-nalog .header-title').textContent = 'Novi nalog';
   generateBrojNaloga();
@@ -1605,7 +1587,6 @@ async function saveNalog() {
     'Cenagoriva': cenaGor,
     'Tro_x0161_kovigoriva': placeno,
     'Pre_x0111_enokilometara': km,
-    'Potro_x0161_enogoriva': potrosnja,
     'Na_x010d_inpla_x0107_anjaputarin': document.getElementById('f-nacin-putarina').value || '-',
     'Iznospla_x0107_eneputarine': parseFloat(document.getElementById('f-putarina').value)||0,
     'Na_x010d_inpla_x0107_anjasme_x01': document.getElementById('f-nacin-smestaj').value || '-',
@@ -1664,7 +1645,6 @@ function showDetalji(id) {
     ]},
     { title: 'Kilometraža', rows: [
       ['Pređeno km', (n['Pre_x0111_enokilometara']||0) + ' km'],
-      ['Potrošeno goriva', parseFloat(n['Potro_x0161_enogoriva']||0).toFixed(2) + ' L'],
     ]},
     { title: 'Ostali troškovi', rows: [
       ['Putarina', (n['Iznospla_x0107_eneputarine']||0).toLocaleString('sr-RS') + ' RSD'],
@@ -1742,7 +1722,6 @@ function editNalog() {
   setVal('f-hrana', n['Tro_x0161_kovihrane']);
 
   calcPlaceno();
-  calcPotrosnja();
   showScreen('novi-nalog');
 }
 
