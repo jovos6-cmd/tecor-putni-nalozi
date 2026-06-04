@@ -1541,7 +1541,7 @@ async function saveNalog() {
   const nosilac = document.getElementById('f-nosilac').value;
 
   if (!datumPolaska) { showToast('Datum polaska je obavezan!', 'error'); btn.textContent='Sačuvaj'; btn.disabled=false; return; }
-  if (!noilac && !nosilac) { /* ok */ }
+ 
 
   const sipano = parseFloat(document.getElementById('f-sipano').value) || 0;
   const cenaGor = parseFloat(document.getElementById('f-cena-goriva').value) || 0;
