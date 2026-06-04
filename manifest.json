@@ -1,0 +1,24 @@
+{
+  "name": "TECOR Putni nalozi",
+  "short_name": "Putni nalozi",
+  "description": "TECOR Lean & Kaizen - Putni nalozi",
+  "start_url": "/tecor-putni-nalozi/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#5b6af0",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
