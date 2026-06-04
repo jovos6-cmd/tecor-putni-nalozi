@@ -758,12 +758,12 @@ html, body {
           <div class="stat-card">
             <div class="stat-label">KM ovaj mesec</div>
             <div class="stat-value" id="stat-km-month">—</div>
-            <div class="stat-sub" id="stat-km-sub">učitavam...</div>
+            <div class="stat-sub" id="stat-km-sub">naloga ovaj mesec</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Naloga ove god.</div>
-            <div class="stat-value" id="stat-count-year">—</div>
-            <div class="stat-sub">putnih naloga</div>
+            <div class="stat-label">KM ove godine</div>
+            <div class="stat-value" id="stat-km-year">—</div>
+            <div class="stat-sub" id="stat-year-sub">naloga ove godine</div>
           </div>
         </div>
 
@@ -794,39 +794,11 @@ html, body {
       </div>
       <div class="search-bar">
         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-input" type="search" placeholder="Traži po nosiocu ili destinaciji..." oninput="filterNalozi(this.value)" id="search-input">
+        <input class="search-input" type="search" placeholder="Pretraga" oninput="filterNalozi(this.value)" id="search-input">
       </div>
       <div class="scroll-content" style="padding-top:0">
         <div class="list-container" id="all-list">
           <div class="loading"><div class="spinner"></div> Učitavam...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATISTIKA -->
-    <div id="screen-statistika" class="screen">
-      <div class="header">
-        <div class="header-title">Statistika</div>
-      </div>
-      <div class="scroll-content" style="padding-top:0">
-        <div class="tab-bar">
-          <div class="tab-btn active" onclick="switchTab('mesec',this)">Ovaj mesec</div>
-          <div class="tab-btn" onclick="switchTab('godina',this)">Ova godina</div>
-        </div>
-
-        <div class="section-header"><div class="section-title">KM po zaposlenom</div></div>
-        <div class="stats-table" id="stats-zaposleni">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-
-        <div class="section-header" style="margin-top:16px"><div class="section-title">KM po vozilu</div></div>
-        <div class="stats-table" id="stats-vozila">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-
-        <div class="section-header" style="margin-top:16px"><div class="section-title">Troškovi goriva po zaposlenom</div></div>
-        <div class="stats-table" id="stats-gorivo">
-          <div class="loading"><div class="spinner"></div></div>
         </div>
       </div>
     </div>
@@ -885,20 +857,12 @@ html, body {
 
           <div class="form-group">
             <div class="form-label">Nosilac putnog naloga <span class="required">*</span></div>
-            <select class="form-select" id="f-nosilac" onchange="autoFillVozilo()">
+            <select class="form-select" id="f-nosilac">
               <option value="">— Izaberi —</option>
             </select>
           </div>
 
-          <div class="form-group trip-only">
-            <div class="form-label">Vozilo</div>
-            <select class="form-select" id="f-vozilo" >
-              <option value="">— Izaberi —</option>
-            </select>
-          </div>
 
-          <!-- PUTNICI (trip only) -->
-          <div class="form-section trip-only"><div class="form-section-title">Putnici</div></div>
 
           <div class="form-group trip-only">
             <div class="form-label">Putnik 2</div>
@@ -1045,10 +1009,7 @@ html, body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
         Novi
       </div>
-      <div class="nav-item" id="nav-statistika" onclick="showScreen('statistika')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Statistika
-      </div>
+
     </div>
 
   </div><!-- /main-app -->
@@ -1089,7 +1050,6 @@ let listsCache = {};
 let naloziData = [];
 let zaposleniData = [];
 let svrhaDataCache = [];
-let vozilaData = [];
 let currentNalogId = null;
 let gorivoMode = false;
 let statsMode = 'mesec';
@@ -1216,10 +1176,7 @@ async function showMainApp() {
 
 async function loadReferenceData() {
   try {
-    [zaposleniData, vozilaData] = await Promise.all([
-      getItems(CONFIG.lists.zaposleni),
-      getItems(CONFIG.lists.vozila)
-    ]);
+    zaposleniData = await getItems(CONFIG.lists.zaposleni);
 
     const svrhaData = await getItems(CONFIG.lists.svrha);
     svrhaDataCache = svrhaData;
@@ -1230,7 +1187,6 @@ async function loadReferenceData() {
     ['f-putnik2','f-putnik3','f-putnik4','f-putnik5'].forEach(id => {
       populateSelect(id, zaposleniData, 'Title', 'id', true);
     });
-    populateSelect('f-vozilo', vozilaData, 'Vozilo', 'id');
     populateSelect('f-svrha', svrhaData, 'Title', 'id');
 
     const sNames = sredstvaData.map(s => s.Title || s['Sredstva_x0020_pla_x0107_anja'] || s.field_1);
@@ -1288,17 +1244,19 @@ async function loadNalozi() {
 function loadHomeStats() {
   const now = new Date();
   const thisMonth = naloziData.filter(n => {
-    const d = new Date(n.DatumPolaska || n.Created);
+    const d = new Date(n.Datumpolaska || n.Created);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const thisYear = naloziData.filter(n => {
-    const d = new Date(n.DatumPolaska || n.Created);
+    const d = new Date(n.Datumpolaska || n.Created);
     return d.getFullYear() === now.getFullYear();
   });
-  const kmMonth = thisMonth.reduce((s,n) => s + (Number(n['Pre_x0111_enokilometara']||n.PredenoKilometara||0)), 0);
+  const kmMonth = thisMonth.reduce((s,n) => s + (Number(n['Pre_x0111_enokilometara']||0)), 0);
+  const kmYear = thisYear.reduce((s,n) => s + (Number(n['Pre_x0111_enokilometara']||0)), 0);
   document.getElementById('stat-km-month').textContent = kmMonth.toLocaleString('sr-RS');
   document.getElementById('stat-km-sub').textContent = `${thisMonth.length} naloga`;
-  document.getElementById('stat-count-year').textContent = thisYear.length;
+  document.getElementById('stat-km-year').textContent = kmYear.toLocaleString('sr-RS');
+  document.getElementById('stat-year-sub').textContent = `${thisYear.length} naloga`;
 }
 
 function formatDate(d) {
@@ -1366,72 +1324,13 @@ function filterNalozi(q) {
   renderAllList(q);
 }
 
-function renderStats() {
-  const now = new Date();
-  const filtered = naloziData.filter(n => {
-    const d = new Date(n.DatumPolaska || n.Created);
-    if (statsMode === 'mesec') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    return d.getFullYear() === now.getFullYear();
-  });
-
-  // KM po zaposlenom
-  const kmZap = {};
-  filtered.forEach(n => {
-    const k = getNalogNasilac(n) || 'Nepoznat';
-    kmZap[k] = (kmZap[k]||0) + getNalogKm(n);
-  });
-  renderStatTable('stats-zaposleni', kmZap, 'km');
-
-  // KM po vozilu
-  const kmVoz = {};
-  filtered.forEach(n => {
-    const v = n.Vozilo || n['Vozilo@odata.navigationLinkUrl'] || '—';
-    if (v && v !== '—') kmVoz[v] = (kmVoz[v]||0) + getNalogKm(n);
-  });
-  renderStatTable('stats-vozila', kmVoz, 'km');
-
-  // Gorivo po zaposlenom
-  const gorZap = {};
-  filtered.forEach(n => {
-    const k = getNalogNasilac(n) || 'Nepoznat';
-    const v = Number(n['Tro_x0161_kovigoriva']||n.TroskoviGoriva||n.Placeno||0);
-    gorZap[k] = (gorZap[k]||0) + v;
-  });
-  renderStatTable('stats-gorivo', gorZap, 'RSD');
-}
-
-function renderStatTable(elId, data, unit) {
-  const el = document.getElementById(elId);
-  const sorted = Object.entries(data).sort((a,b) => b[1]-a[1]);
-  if (!sorted.length) {
-    el.innerHTML = `<div class="empty" style="padding:16px"><div class="empty-sub">Nema podataka za ovaj period</div></div>`;
-    return;
-  }
-  el.innerHTML = `
-    <div class="stats-table-header" style="grid-template-columns:1fr auto">
-      <span>Naziv</span><span>Ukupno</span>
-    </div>
-    ${sorted.map(([k,v]) => `
-      <div class="stats-table-row" style="grid-template-columns:1fr auto">
-        <span class="stats-col-name">${k}</span>
-        <span class="stats-col-val">${v.toLocaleString('sr-RS')} ${unit}</span>
-      </div>`).join('')}`;
-}
-
-function switchTab(mode, el) {
-  statsMode = mode;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderStats();
-}
-
 // ── SCREEN NAV ──
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-  const map = {'home':'screen-home','pregled':'screen-pregled','novi-nalog':'screen-novi-nalog','statistika':'screen-statistika','detalji':'screen-detalji'};
-  const navMap = {'home':'nav-home','pregled':'nav-pregled','novi-nalog':'nav-novi','statistika':'nav-statistika'};
+  const map = {'home':'screen-home','pregled':'screen-pregled','novi-nalog':'screen-novi-nalog','detalji':'screen-detalji'};
+  const navMap = {'home':'nav-home','pregled':'nav-pregled','novi-nalog':'nav-novi',};
 
   const screenId = map[name];
   if (screenId) document.getElementById(screenId).classList.add('active');
@@ -1439,7 +1338,6 @@ function showScreen(name) {
   const navId = navMap[name];
   if (navId) document.getElementById(navId).classList.add('active');
 
-  if (name === 'statistika') renderStats();
   if (name === 'pregled') renderAllList(document.getElementById('search-input')?.value || '');
   if (name === 'novi-nalog') { resetForm(); }
 }
@@ -1467,25 +1365,14 @@ function toggleGorivo() {
 let currentBase = 150;
 
 function generateBrojNaloga() {
-  const min = 149;
-  let max = min;
-  naloziData.forEach(n => {
-    const raw = String(n.Title || '');
-    // Get first continuous digit sequence only
-    const match = raw.match(/^\s*(\d+)/);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (!isNaN(num) && num > max) max = num;
-    }
-  });
-  currentBase = max + 1;
+  // Simple: next number = count of all records + 1
+  currentBase = naloziData.length + 1;
   updateBrojNaloga(currentBase);
   return currentBase;
 }
 
 function updateBrojNaloga(base) {
-  // Always ensure base is a clean integer
-  const b = parseInt(String(base).match(/^\d+/)?.[0] || '150', 10);
+  const b = parseInt(base, 10);
   if (gorivoToggle) {
     document.getElementById('broj-naloga-display').textContent = '0';
     return;
@@ -1498,27 +1385,12 @@ function updateBrojNaloga(base) {
   ].filter(v => v && v !== '' && v !== '-').length;
 
   const total = 1 + putnici;
-
   if (total === 1) {
     document.getElementById('broj-naloga-display').textContent = String(b);
   } else {
     const letters = ['A','B','C','D','E'];
-    const result = Array.from({length: total}, (_,i) => `${b}${letters[i]}`).join(', ');
-    document.getElementById('broj-naloga-display').textContent = result;
-  }
-}
-
-function autoFillVozilo() {
-  const nosilacId = document.getElementById('f-nosilac').value;
-  const zaposleni = zaposleniData.find(z => z.id === nosilacId);
-  if (zaposleni) {
-    const vozTitle = zaposleni['Vlasnik_x0020_vozila'] || zaposleni['VlasnikVozila'] || zaposleni['Vlasnik_x0020_Vozila'];
-    if (vozTitle) {
-      const vozilo = vozilaData.find(v => v.Vozilo === vozTitle || v.Title === vozTitle);
-      if (vozilo) {
-        document.getElementById('f-vozilo').value = vozilo.id;
-            }
-    }
+    document.getElementById('broj-naloga-display').textContent = 
+      Array.from({length: total}, (_,i) => `${b}${letters[i]}`).join(', ');
   }
 }
 
@@ -1561,8 +1433,6 @@ async function saveNalog() {
   const placeno = sipano * cenaGor;
 
   const km = parseInt(document.getElementById('f-km').value) || 0;
-  const voziloId = document.getElementById('f-vozilo').value;
-  const vozilo = vozilaData.find(v => v.id === voziloId);
   const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotrošnja']||vozilo.ProsecnaPotrošnja||0) : 0;
   const potrosnja = km * pp / 100;
 
@@ -1578,7 +1448,6 @@ async function saveNalog() {
     'Datumpovratla': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
     'Vremepovratka': document.getElementById('f-vreme-povratka').value || '-',
     'Nosilacputnognaloga': zapIme || '-',
-    'Vozilo': vozilo?.Vozilo || '-',
     'Putnik2': document.getElementById('f-putnik2').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik2').value)?.Title || '-') : '-',
     'Putnik3': document.getElementById('f-putnik3').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik3').value)?.Title || '-') : '-',
     'Putnik4': document.getElementById('f-putnik4').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik4').value)?.Title || '-') : '-',
@@ -1637,7 +1506,6 @@ function showDetalji(id) {
       ['Datum polaska', formatDate(n.Datumpolaska)],
       ['Datum povratka', formatDate(n.Datumpovratla)],
       ['Nosilac', n.Nosilacputnognaloga || '—'],
-      ['Vozilo', n.Vozilo || '—'],
       ['Destinacija', n.Destinacija || '—'],
       ['Klijent', n.Klijent || '—'],
       ['Svrha', n.Svrhaputa || '—'],
@@ -1671,10 +1539,19 @@ function editNalog() {
   const n = naloziData.find(x => x.id === currentNalogId);
   if (!n) return;
 
-  // Save ID before resetForm clears it
   const savedId = currentNalogId;
-
-  resetForm();
+  
+  // Reset form without clearing currentNalogId
+  gorivoToggle = false;
+  document.getElementById('gorivo-switch').classList.remove('on');
+  document.getElementById('gorivo-toggle').classList.remove('active');
+  document.getElementById('fuel-banner').style.display = 'none';
+  document.querySelectorAll('.trip-only').forEach(el => el.style.display = '');
+  document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el => {
+    if (el.type === 'date') el.value = new Date().toISOString().split('T')[0];
+    else el.value = '';
+  });
+  document.getElementById('calc-placeno').textContent = '0.00 RSD';
   currentNalogId = savedId;
   document.querySelector('#screen-novi-nalog .header-title').textContent = 'Izmeni nalog';
   document.getElementById('broj-naloga-display').textContent = getNalogDisplayName(n);
@@ -1701,7 +1578,6 @@ function editNalog() {
 
   // Lookup fields by text
   setSelectByText('f-nosilac', n.Nosilacputnognaloga);
-  setSelectByText('f-vozilo', n.Vozilo);
   setSelectByText('f-svrha', n.Svrhaputa);
   setSelectByText('f-putnik2', n.Putnik2);
   setSelectByText('f-putnik3', n.Putnik3);
