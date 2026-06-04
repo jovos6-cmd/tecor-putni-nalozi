@@ -1234,7 +1234,6 @@ async function loadNalozi() {
     naloziData.sort((a,b) => new Date(b.DatumPolaska||b.Created) - new Date(a.DatumPolaska||a.Created));
     renderRecentList();
     renderAllList();
-    renderStats();
   } catch(e) {
     console.error('Greška pri učitavanju naloga:', e);
     document.getElementById('recent-list').innerHTML = `<div class="empty"><div class="empty-title">Greška pri učitavanju</div><div class="empty-sub">${e.message}</div></div>`;
@@ -1339,7 +1338,7 @@ function showScreen(name) {
   if (navId) document.getElementById(navId).classList.add('active');
 
   if (name === 'pregled') renderAllList(document.getElementById('search-input')?.value || '');
-  if (name === 'novi-nalog') { resetForm(); }
+  if (name === 'novi-nalog' && !currentNalogId) { resetForm(); }
 }
 
 // ── FORM ──
@@ -1365,8 +1364,16 @@ function toggleGorivo() {
 let currentBase = 150;
 
 function generateBrojNaloga() {
-  // Simple: next number = count of all records + 1
-  currentBase = naloziData.length + 1;
+  let max = 0;
+  naloziData.forEach(n => {
+    const raw = String(n.Title || '');
+    const match = raw.match(/(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > max) max = num;
+    }
+  });
+  currentBase = max + 1;
   updateBrojNaloga(currentBase);
   return currentBase;
 }
