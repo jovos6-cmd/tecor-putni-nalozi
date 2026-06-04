@@ -1007,16 +1007,7 @@ html, body {
             <textarea class="form-textarea" id="f-napomena" placeholder="Dodatne napomene..." style="min-height:60px"></textarea>
           </div>
 
-          <!-- PDF RACUN -->
-          <div class="form-section"><div class="form-section-title">Prilog</div></div>
-          <div class="form-group">
-            <div class="form-label">PDF računa za gorivo</div>
-            <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span id="pdf-label" style="color:var(--text2);font-size:14px">Izaberi PDF fajl...</span>
-              <input type="file" id="f-pdf-racun" accept=".pdf,image/*" style="display:none" onchange="updatePdfLabel(this)">
-            </label>
-          </div>
+
 
           <!-- SAVE BUTTON -->
           <div style="margin-top:20px;margin-bottom:8px">
@@ -1596,15 +1587,15 @@ async function saveNalog() {
     'Vremepolaska': document.getElementById('f-vreme-polaska').value || '-',
     'Datumpovratla': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
     'Vremepovratka': document.getElementById('f-vreme-povratka').value || '-',
-    'Nosilacputnognaloga': zapIme || '-',
-    'Vozilo': vozilo?.Vozilo || '-',
-    'Putnik2': document.getElementById('f-putnik2').value || '-',
-    'Putnik3': document.getElementById('f-putnik3').value || '-',
-    'Putnik4': document.getElementById('f-putnik4').value || '-',
-    'Putnik5': document.getElementById('f-putnik5').value || '-',
+    'NosilacputnognalogatLookupId': nosilac ? parseInt(nosilac) : null,
+    'VoziloLookupId': voziloId ? parseInt(voziloId) : null,
+    'Putnik2LookupId': document.getElementById('f-putnik2').value && document.getElementById('f-putnik2').value !== '-' ? parseInt(document.getElementById('f-putnik2').value) : null,
+    'Putnik3LookupId': document.getElementById('f-putnik3').value && document.getElementById('f-putnik3').value !== '-' ? parseInt(document.getElementById('f-putnik3').value) : null,
+    'Putnik4LookupId': document.getElementById('f-putnik4').value && document.getElementById('f-putnik4').value !== '-' ? parseInt(document.getElementById('f-putnik4').value) : null,
+    'Putnik5LookupId': document.getElementById('f-putnik5').value && document.getElementById('f-putnik5').value !== '-' ? parseInt(document.getElementById('f-putnik5').value) : null,
     'Klijent': document.getElementById('f-klijent').value || '-',
     'Destinacija': document.getElementById('f-destinacija').value || '-',
-    'Svrhaputa': document.getElementById('f-svrha').value || '-',
+    'SvrhapuaLookupId': document.getElementById('f-svrha').value ? parseInt(document.getElementById('f-svrha').value) : null,
     'Izve_x0161_taj': document.getElementById('f-izvestaj').value || '-',
     'Na_x010d_inpla_x0107_anjagoriva': document.getElementById('f-nacin-gorivo').value || '-',
     'Sipanolitara': sipano,
@@ -1622,8 +1613,10 @@ async function saveNalog() {
   };
 
   try {
-    // Try saving with all fields, if error try with minimal fields
-    let saveFields = {...fields};
+    // Remove null/empty lookup fields before sending
+    let saveFields = Object.fromEntries(
+      Object.entries(fields).filter(([k, v]) => v !== null && v !== undefined && v !== '')
+    );
     if (currentNalogId) {
       await updateItem(CONFIG.lists.nalozi, currentNalogId, saveFields);
       showToast('Nalog izmenjen ✓', 'success');
@@ -1691,22 +1684,50 @@ function editNalog() {
   if (!n) return;
   resetForm();
   document.querySelector('#screen-novi-nalog .header-title').textContent = 'Izmeni nalog';
+  currentNalogId = n.id;
 
-  // populate fields
   document.getElementById('broj-naloga-display').textContent = getNalogDisplayName(n);
-  if (n.DatumPolaska) document.getElementById('f-datum-polaska').value = n.DatumPolaska.split('T')[0];
-  if (n.VremePolaska) document.getElementById('f-vreme-polaska').value = n.VremePolaska;
-  if (n.DatumPovratka) document.getElementById('f-datum-povratka').value = n.DatumPovratka.split('T')[0];
-  if (n.VremePovratka) document.getElementById('f-vreme-povratka').value = n.VremePovratka;
-  document.getElementById('f-klijent').value = n.Klijent !== '-' ? (n.Klijent||'') : '';
-  document.getElementById('f-destinacija').value = n.Destinacija !== '-' ? (n.Destinacija||'') : '';
-  document.getElementById('f-sipano').value = n.SipanoLitara || '';
-  document.getElementById('f-cena-goriva').value = n.CenaGoriva || '';
-  document.getElementById('f-km').value = n.PredenoKilometara || '';
-  document.getElementById('f-putarina').value = n.IznosPlaćenePutarine || '';
-  document.getElementById('f-smestaj').value = n.CenaSmestaja || '';
-  document.getElementById('f-hrana').value = n.TroskoviHrane || '';
-  document.getElementById('f-napomena').value = n.NapomeneIkomentari !== '-' ? (n.NapomeneIkomentari||'') : '';
+
+  // Dates
+  const dp = n.Datumpolaska || n.DatumPolaska;
+  const dpo = n.Datumpovratla || n.DatumPovratka;
+  if (dp) document.getElementById('f-datum-polaska').value = dp.split('T')[0];
+  if (n.Vremepolaska || n.VremePolaska) document.getElementById('f-vreme-polaska').value = n.Vremepolaska || n.VremePolaska;
+  if (dpo) document.getElementById('f-datum-povratka').value = dpo.split('T')[0];
+  if (n.Vremepovratka || n.VremePovratka) document.getElementById('f-vreme-povratka').value = n.Vremepovratka || n.VremePovratka;
+
+  // Lookup fields - use LookupId
+  const nosilacId = n.NosilacputnognalogatLookupId || n.NosilacputnognalognalogatLookupId;
+  if (nosilacId) document.getElementById('f-nosilac').value = String(nosilacId);
+  const voziloId = n.VoziloLookupId;
+  if (voziloId) { document.getElementById('f-vozilo').value = String(voziloId); }
+  const svrhId = n.SvrhapuaLookupId || n.SvrhaputtaLookupId;
+  if (svrhId) document.getElementById('f-svrha').value = String(svrhId);
+  const p2 = n.Putnik2LookupId; if (p2) document.getElementById('f-putnik2').value = String(p2);
+  const p3 = n.Putnik3LookupId; if (p3) document.getElementById('f-putnik3').value = String(p3);
+  const p4 = n.Putnik4LookupId; if (p4) document.getElementById('f-putnik4').value = String(p4);
+  const p5 = n.Putnik5LookupId; if (p5) document.getElementById('f-putnik5').value = String(p5);
+
+  // Text fields
+  document.getElementById('f-klijent').value = (n.Klijent && n.Klijent !== '-') ? n.Klijent : '';
+  document.getElementById('f-destinacija').value = (n.Destinacija && n.Destinacija !== '-') ? n.Destinacija : '';
+  document.getElementById('f-izvestaj').value = (n['Izve_x0161_taj'] && n['Izve_x0161_taj'] !== '-') ? n['Izve_x0161_taj'] : '';
+
+  // Nacin placanja
+  const ng = n['Na_x010d_inpla_x0107_anjagoriva']; if (ng && ng !== '-') document.getElementById('f-nacin-gorivo').value = ng;
+  const np = n['Na_x010d_inpla_x0107_anjaputarin']; if (np && np !== '-') document.getElementById('f-nacin-putarina').value = np;
+  const ns = n['Na_x010d_inpla_x0107_anjasme_x01']; if (ns && ns !== '-') document.getElementById('f-nacin-smestaj').value = ns;
+  const nh = n['Na_x010d_inpla_x0107_anjahrane']; if (nh && nh !== '-') document.getElementById('f-nacin-hrana').value = nh;
+
+  // Numbers
+  document.getElementById('f-sipano').value = n.Sipanolitara || '';
+  document.getElementById('f-cena-goriva').value = n.Cenagoriva || '';
+  document.getElementById('f-km').value = n['Pre_x0111_enokilometara'] || '';
+  document.getElementById('f-putarina').value = n['Iznospla_x0107_eneputarine'] || '';
+  document.getElementById('f-smestaj').value = n['Cenasme_x0161_taja'] || '';
+  document.getElementById('f-hrana').value = n['Tro_x0161_kovihrane'] || '';
+  document.getElementById('f-napomena').value = (n.Napomeneikomentari && n.Napomeneikomentari !== '-') ? n.Napomeneikomentari : '';
+
   calcPlaceno(); calcPotrosnja();
   showScreen('novi-nalog');
 }
