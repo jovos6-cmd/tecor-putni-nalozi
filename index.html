@@ -721,11 +721,14 @@ html, body {
 
   <!-- LOGIN -->
   <div id="login-screen" style="position:relative;z-index:1">
-    <div class="login-logo">
-      <svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="30" cy="30" r="28" fill="none" stroke="#00ff41" stroke-width="2"/>
-        <path d="M30 8 L30 52 M18 15 L42 45 M42 15 L18 45" stroke="#00ff41" stroke-width="1.5" opacity="0.4"/>
-        <path d="M20 22 C20 22 25 18 30 20 C35 22 36 28 33 31 C30 34 24 33 22 36 C20 39 22 43 26 44 C30 45 38 42 40 38" stroke="#00ff41" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <div class="login-logo" style="background:transparent;box-shadow:none">
+      <svg viewBox="0 0 200 160" width="120" height="96" xmlns="http://www.w3.org/2000/svg">
+        <!-- Left blue triangle -->
+        <polygon points="10,140 70,140 40,60" fill="#1a5fa8"/>
+        <!-- Right blue triangle -->
+        <polygon points="60,140 120,140 90,60" fill="#1a5fa8" opacity="0.85"/>
+        <!-- Grey diamond -->
+        <polygon points="75,50 95,10 115,50 95,90" fill="#8899aa"/>
       </svg>
     </div>
     <div>
@@ -1597,7 +1600,7 @@ async function saveNalog() {
 
   const fields = {
     'Title': brojNaloga,
-    'SIPANJE_x0020_GORIVA_x0020_BEZ_': gorivoToggle,
+    'Sipanjegoriva': gorivoToggle,
     'DatumPolaska': datumPolaska ? new Date(datumPolaska).toISOString() : null,
     'VremePolaska': document.getElementById('f-vreme-polaska').value || '-',
     'DatumPovratka': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
@@ -1628,11 +1631,13 @@ async function saveNalog() {
   };
 
   try {
+    // Try saving with all fields, if error try with minimal fields
+    let saveFields = {...fields};
     if (currentNalogId) {
-      await updateItem(CONFIG.lists.nalozi, currentNalogId, fields);
+      await updateItem(CONFIG.lists.nalozi, currentNalogId, saveFields);
       showToast('Nalog izmenjen ✓', 'success');
     } else {
-      await createItem(CONFIG.lists.nalozi, fields);
+      await createItem(CONFIG.lists.nalozi, saveFields);
       showToast('Nalog sačuvan ✓', 'success');
     }
     await loadNalozi();
