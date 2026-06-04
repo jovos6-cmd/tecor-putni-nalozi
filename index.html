@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TECOR · Putni nalozi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --surface3: #252533;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0f0f5;
+  --text2: #8888a0;
+  --text3: #55556a;
+  --accent: #5b6af0;
+  --accent2: #7b8af8;
+  --accent-glow: rgba(91,106,240,0.25);
+  --green: #34d399;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HEADER ── */
+.header {
+  padding: calc(var(--safe-top) + 16px) 20px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.header-back {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.header-back:active { background: var(--surface2); }
+.header-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+.header-action {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  font-family: var(--font);
+}
+.header-action:active { opacity: 0.8; transform: scale(0.97); }
+.header-action.ghost {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+
+/* ── SCROLL CONTENT ── */
+.scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--safe-bottom) + 80px);
+}
+.scroll-content::-webkit-scrollbar { display: none; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 8px 8px calc(var(--safe-bottom) + 8px);
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.15s;
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 500;
+}
+.nav-item.active { color: var(--accent2); }
+.nav-item svg { width: 22px; height: 22px; }
+.nav-item:active { background: var(--surface); }
+
+/* ── HOME SCREEN ── */
+.home-hero {
+  padding: 24px 20px 16px;
+  background: linear-gradient(180deg, rgba(91,106,240,0.08) 0%, transparent 100%);
+}
+.home-greeting {
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 4px;
+  font-weight: 400;
+}
+.home-name {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+.home-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 20px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.6;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--mono);
+  letter-spacing: -0.5px;
+}
+.stat-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+.quick-action {
+  margin: 4px 20px;
+  padding: 16px 20px;
+  background: var(--accent);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.quick-action::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+.quick-action:active { transform: scale(0.98); opacity: 0.9; }
+.quick-action-icon {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.quick-action-text { flex: 1; }
+.quick-action-title { font-size: 15px; font-weight: 600; }
+.quick-action-sub { font-size: 12px; opacity: 0.75; }
+
+.section-header {
+  padding: 20px 20px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.section-link {
+  font-size: 13px;
+  color: var(--accent2);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ── LIST ITEMS ── */
+.list-container { padding: 0 20px; display: flex; flex-direction: column; gap: 8px; }
+
+.list-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.list-item:active { background: var(--surface2); border-color: var(--border2); }
+
+.list-item-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.list-item-body { flex: 1; min-width: 0; }
+.list-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-item-sub {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-item-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.list-item-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--accent2);
+}
+.list-item-date {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-green { background: rgba(52,211,153,0.15); color: var(--green); }
+.badge-blue { background: rgba(91,106,240,0.15); color: var(--accent2); }
+.badge-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+
+/* ── FORM ── */
+.form-container { padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
+
+.form-section {
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+.form-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+.form-group { margin-bottom: 10px; }
+.form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.form-label .required { color: var(--accent2); }
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  padding: 12px 14px;
+  outline: none;
+  transition: all 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-input::placeholder { color: var(--text3); }
+.form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2355556a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.form-select option { background: var(--surface2); }
+.form-textarea { resize: none; min-height: 80px; line-height: 1.5; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.form-calc {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: var(--mono);
+  color: var(--accent2);
+  font-weight: 500;
+}
+.form-calc-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* Toggle */
+.toggle-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.toggle-card.active {
+  border-color: var(--accent);
+  background: rgba(91,106,240,0.08);
+}
+.toggle-label { font-size: 14px; font-weight: 500; }
+.toggle-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+.toggle-switch {
+  width: 44px; height: 26px;
+  background: var(--surface3);
+  border-radius: 13px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch.on { background: var(--accent); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle-switch.on::after { transform: translateX(18px); }
+
+/* Broj naloga display */
+.naloga-display {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--accent2);
+  letter-spacing: 1px;
+}
+
+/* ── STATS SCREEN ── */
+.stats-table {
+  margin: 0 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stats-table-header {
+  display: grid;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stats-table-row {
+  display: grid;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background 0.1s;
+}
+.stats-table-row:last-child { border-bottom: none; }
+.stats-table-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+.stats-col-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stats-col-val { font-size: 13px; font-family: var(--mono); font-weight: 500; color: var(--accent2); text-align: right; }
+
+.tab-bar {
+  display: flex;
+  margin: 12px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab-btn.active {
+  background: var(--surface3);
+  color: var(--text);
+}
+
+/* ── SEARCH ── */
+.search-bar {
+  margin: 12px 20px;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  padding: 11px 14px 11px 40px;
+  outline: none;
+  transition: all 0.15s;
+  -webkit-appearance: none;
+}
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.search-input::placeholder { color: var(--text3); }
+.search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+}
+
+/* ── DETAIL / EDIT ── */
+.detail-section {
+  margin: 0 20px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.detail-section-title {
+  padding: 10px 14px;
+  background: var(--surface2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+.detail-row {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-key { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.detail-val { font-size: 13px; font-weight: 500; text-align: right; }
+
+/* ── LOGIN ── */
+#login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+  gap: 32px;
+  flex: 1;
+}
+.login-logo {
+  width: 80px; height: 80px;
+  background: var(--accent);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 8px 32px var(--accent-glow);
+}
+.login-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+.login-sub { font-size: 15px; color: var(--text2); line-height: 1.6; }
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.login-btn:active { transform: scale(0.98); }
+
+/* ── LOADING / EMPTY ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text3);
+  gap: 10px;
+  font-size: 14px;
+}
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--surface3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text3);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; }
+
+/* ── DELETE CONFIRM ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+.modal-card {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.modal-title { font-size: 18px; font-weight: 600; }
+.modal-sub { font-size: 14px; color: var(--text2); }
+.modal-actions { display: flex; gap: 10px; }
+.btn { padding: 14px; border-radius: var(--radius); font-size: 15px; font-weight: 600; font-family: var(--font); cursor: pointer; border: none; flex: 1; transition: all 0.15s; }
+.btn:active { transform: scale(0.97); }
+.btn-danger { background: var(--red); color: white; }
+.btn-ghost { background: var(--surface3); color: var(--text2); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  top: calc(var(--safe-top) + 16px);
+  left: 50%; transform: translateX(-50%);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 2000;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: toastIn 0.2s ease;
+}
+.toast.success { border-color: rgba(52,211,153,0.3); color: var(--green); }
+.toast.error { border-color: rgba(248,113,113,0.3); color: var(--red); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Fuel only highlight */
+.fuel-mode-banner {
+  margin: 0 20px 12px;
+  padding: 10px 14px;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--yellow);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-logo">🚗</div>
+    <div>
+      <div class="login-title">Putni nalozi</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--mono)">TECOR Lean & Kaizen</div>
+    </div>
+    <div class="login-sub">Prijavite se sa vašim poslovnim nalogom da biste pristupili aplikaciji.</div>
+    <button class="login-btn" onclick="login()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg>
+      Prijavi se sa Microsoft nalogom
+    </button>
+    <div id="login-status" style="font-size:13px;color:var(--text3);"></div>
+  </div>
+
+  <!-- MAIN APP (hidden until login) -->
+  <div id="main-app" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+
+    <!-- HOME -->
+    <div id="screen-home" class="screen active">
+      <div class="scroll-content">
+        <div class="home-hero">
+          <div class="home-greeting">Dobrodošli,</div>
+          <div class="home-name" id="user-name">—</div>
+        </div>
+
+        <div class="home-stats">
+          <div class="stat-card">
+            <div class="stat-label">KM ovaj mesec</div>
+            <div class="stat-value" id="stat-km-month">—</div>
+            <div class="stat-sub" id="stat-km-sub">učitavam...</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Naloga ove god.</div>
+            <div class="stat-value" id="stat-count-year">—</div>
+            <div class="stat-sub">putnih naloga</div>
+          </div>
+        </div>
+
+        <div class="quick-action" onclick="showScreen('novi-nalog')">
+          <div class="quick-action-icon">➕</div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Novi putni nalog</div>
+            <div class="quick-action-sub">Unesite novi nalog ili sipanje goriva</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">Poslednji unosi</div>
+          <div class="section-link" onclick="showScreen('pregled')">Svi →</div>
+        </div>
+
+        <div class="list-container" id="recent-list">
+          <div class="loading"><div class="spinner"></div> Učitavam...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREGLED -->
+    <div id="screen-pregled" class="screen">
+      <div class="header">
+        <div class="header-title">Svi nalozi</div>
+      </div>
+      <div class="search-bar">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" type="search" placeholder="Traži po nosiocu ili destinaciji..." oninput="filterNalozi(this.value)" id="search-input">
+      </div>
+      <div class="scroll-content" style="padding-top:0">
+        <div class="list-container" id="all-list">
+          <div class="loading"><div class="spinner"></div> Učitavam...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATISTIKA -->
+    <div id="screen-statistika" class="screen">
+      <div class="header">
+        <div class="header-title">Statistika</div>
+      </div>
+      <div class="scroll-content" style="padding-top:0">
+        <div class="tab-bar">
+          <div class="tab-btn active" onclick="switchTab('mesec',this)">Ovaj mesec</div>
+          <div class="tab-btn" onclick="switchTab('godina',this)">Ova godina</div>
+        </div>
+
+        <div class="section-header"><div class="section-title">KM po zaposlenom</div></div>
+        <div class="stats-table" id="stats-zaposleni">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+
+        <div class="section-header" style="margin-top:16px"><div class="section-title">KM po vozilu</div></div>
+        <div class="stats-table" id="stats-vozila">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+
+        <div class="section-header" style="margin-top:16px"><div class="section-title">Troškovi goriva po zaposlenom</div></div>
+        <div class="stats-table" id="stats-gorivo">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOVI NALOG -->
+    <div id="screen-novi-nalog" class="screen">
+      <div class="header">
+        <div class="header-back" onclick="showScreen('home')">←</div>
+        <div class="header-title">Novi nalog</div>
+        <button class="header-action" onclick="saveNalog()">Sačuvaj</button>
+      </div>
+      <div class="scroll-content" style="padding-top:0">
+        <div class="form-container">
+
+          <!-- TOGGLE -->
+          <div class="toggle-card" id="gorivo-toggle" onclick="toggleGorivo()">
+            <div>
+              <div class="toggle-label">⛽ Sipanje goriva bez puta</div>
+              <div class="toggle-sub">Prikazaće samo polja za gorivo</div>
+            </div>
+            <div class="toggle-switch" id="gorivo-switch"></div>
+          </div>
+
+          <!-- BROJ NALOGA -->
+          <div class="form-group">
+            <div class="form-label">Broj naloga</div>
+            <div class="naloga-display" id="broj-naloga-display">—</div>
+          </div>
+
+          <!-- Fuel mode banner -->
+          <div class="fuel-mode-banner" id="fuel-banner" style="display:none">
+            ⛽ Režim sipanja goriva — prikazana samo obavezna polja
+          </div>
+
+          <!-- OSNOVNO -->
+          <div class="form-section"><div class="form-section-title">Osnovno</div></div>
+
+          <div class="form-group">
+            <div class="form-label">Datum polaska <span class="required">*</span></div>
+            <input type="date" class="form-input" id="f-datum-polaska">
+          </div>
+
+          <div class="form-group trip-only">
+            <div class="form-label">Vreme polaska</div>
+            <input type="time" class="form-input" id="f-vreme-polaska" placeholder="08:00">
+          </div>
+
+          <div class="form-group trip-only">
+            <div class="form-label">Datum povratka</div>
+            <input type="date" class="form-input" id="f-datum-povratka">
+          </div>
+
+          <div class="form-group trip-only">
+            <div class="form-label">Vreme povratka</div>
+            <input type="time" class="form-input" id="f-vreme-povratka">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Nosilac putnog naloga <span class="required">*</span></div>
+            <select class="form-select" id="f-nosilac" onchange="autoFillVozilo()">
+              <option value="">— Izaberi —</option>
+            </select>
+          </div>
+
+          <div class="form-group trip-only">
+            <div class="form-label">Vozilo</div>
+            <select class="form-select" id="f-vozilo">
+              <option value="">— Izaberi —</option>
+            </select>
+          </div>
+
+          <!-- PUTNICI (trip only) -->
+          <div class="form-section trip-only"><div class="form-section-title">Putnici</div></div>
+
+          <div class="form-group trip-only">
+            <div class="form-label">Putnik 2</div>
+            <select class="form-select" id="f-putnik2"><option value="">—</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Putnik 3</div>
+            <select class="form-select" id="f-putnik3"><option value="">—</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Putnik 4</div>
+            <select class="form-select" id="f-putnik4"><option value="">—</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Putnik 5</div>
+            <select class="form-select" id="f-putnik5"><option value="">—</option></select>
+          </div>
+
+          <!-- DESTINACIJA (trip only) -->
+          <div class="form-section trip-only"><div class="form-section-title">Putovanje</div></div>
+
+          <div class="form-group trip-only">
+            <div class="form-label">Klijent</div>
+            <input type="text" class="form-input" id="f-klijent" placeholder="Naziv klijenta">
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Destinacija</div>
+            <input type="text" class="form-input" id="f-destinacija" placeholder="Grad / mesto">
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Svrha puta</div>
+            <select class="form-select" id="f-svrha"><option value="">— Izaberi —</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Izveštaj</div>
+            <textarea class="form-textarea" id="f-izvestaj" placeholder="Kratak opis..."></textarea>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Pređeno kilometara</div>
+            <input type="number" class="form-input" id="f-km" placeholder="0" min="0" oninput="calcPotrosnja()">
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Potrošeno goriva (L)</div>
+            <div class="form-calc" id="calc-potrosnja">0.00 L</div>
+            <div class="form-calc-label">Automatski: km × prosečna potrošnja vozila</div>
+          </div>
+
+          <!-- GORIVO -->
+          <div class="form-section"><div class="form-section-title">Gorivo</div></div>
+
+          <div class="form-group">
+            <div class="form-label">Način plaćanja goriva <span class="required">*</span></div>
+            <select class="form-select" id="f-nacin-gorivo">
+              <option value="">—</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <div class="form-label">Sipano (L) <span class="required">*</span></div>
+              <input type="number" class="form-input" id="f-sipano" placeholder="0.00" step="0.01" min="0" oninput="calcPlaceno()">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Cena (RSD/L) <span class="required">*</span></div>
+              <input type="number" class="form-input" id="f-cena-goriva" placeholder="0.00" step="0.01" min="0" oninput="calcPlaceno()">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Plaćeno (RSD)</div>
+            <div class="form-calc" id="calc-placeno">0.00 RSD</div>
+            <div class="form-calc-label">Automatski: sipano × cena</div>
+          </div>
+
+          <!-- PUTARINA (trip only) -->
+          <div class="form-section trip-only"><div class="form-section-title">Putarina</div></div>
+          <div class="form-group trip-only">
+            <div class="form-label">Način plaćanja putarine</div>
+            <select class="form-select" id="f-nacin-putarina"><option value="">—</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Iznos putarine (RSD)</div>
+            <input type="number" class="form-input" id="f-putarina" placeholder="0" min="0">
+          </div>
+
+          <!-- SMEŠTAJ (trip only) -->
+          <div class="form-section trip-only"><div class="form-section-title">Smeštaj i hrana</div></div>
+          <div class="form-group trip-only">
+            <div class="form-label">Način plaćanja smeštaja</div>
+            <select class="form-select" id="f-nacin-smestaj"><option value="">—</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Cena smeštaja (RSD)</div>
+            <input type="number" class="form-input" id="f-smestaj" placeholder="0" min="0">
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Način plaćanja hrane</div>
+            <select class="form-select" id="f-nacin-hrana"><option value="">—</option></select>
+          </div>
+          <div class="form-group trip-only">
+            <div class="form-label">Troškovi hrane (RSD)</div>
+            <input type="number" class="form-input" id="f-hrana" placeholder="0" min="0">
+          </div>
+
+          <!-- NAPOMENA -->
+          <div class="form-section"><div class="form-section-title">Napomena</div></div>
+          <div class="form-group">
+            <textarea class="form-textarea" id="f-napomena" placeholder="Dodatne napomene..." style="min-height:60px"></textarea>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- DETALJI NALOGA -->
+    <div id="screen-detalji" class="screen">
+      <div class="header">
+        <div class="header-back" onclick="showScreen('pregled')">←</div>
+        <div class="header-title" id="detail-title">Nalog</div>
+        <button class="header-action ghost" onclick="deleteNalogConfirm()">Briši</button>
+      </div>
+      <div class="scroll-content" style="padding-top:0">
+        <div id="detail-content">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+        <div style="padding:0 20px 16px;display:flex;gap:10px">
+          <button class="btn" style="background:var(--accent);color:white" onclick="editNalog()">✏️ Izmeni</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+      <div class="nav-item active" id="nav-home" onclick="showScreen('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Početna
+      </div>
+      <div class="nav-item" id="nav-pregled" onclick="showScreen('pregled')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        Pregled
+      </div>
+      <div class="nav-item" id="nav-novi" onclick="showScreen('novi-nalog')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        Novi
+      </div>
+      <div class="nav-item" id="nav-statistika" onclick="showScreen('statistika')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Statistika
+      </div>
+    </div>
+
+  </div><!-- /main-app -->
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG — zameni sa tvojim vrednostima
+// ══════════════════════════════════════════
+const CONFIG = {
+  clientId: '6a6c3fa7-86a7-46e6-8211-63cb63f448a8',
+  tenantId: '7b0771f9-3fd7-4bca-8ca2-0babc703a1f9',
+  siteUrl: 'https://tecorconsulting.sharepoint.com/sites/TecorInterniProcesi',
+  lists: {
+    nalozi: 'TECOR - Putni nalozi',
+    zaposleni: 'Zaposleni',
+    vozila: 'Vozila',
+    svrha: 'Svrha puta',
+    sredstva: 'Sredstva pla\u0107anja'
+  }
+};
+
+// ── MSAL setup ──
+const msalConfig = {
+  auth: {
+    clientId: CONFIG.clientId,
+    authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+    redirectUri: window.location.href.split('?')[0].split('#')[0]
+  },
+  cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: true }
+};
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+const scopes = ['https://graph.microsoft.com/Sites.ReadWrite.All', 'User.Read'];
+
+let currentUser = null;
+let siteId = null;
+let listsCache = {};
+let naloziData = [];
+let zaposleniData = [];
+let vozilaData = [];
+let currentNalogId = null;
+let gorivoMode = false;
+let statsMode = 'mesec';
+
+// ── INIT ──
+async function init() {
+  try {
+    await msalInstance.initialize();
+    const resp = await msalInstance.handleRedirectPromise();
+    if (resp) {
+      currentUser = resp.account;
+      showMainApp();
+    } else {
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        currentUser = accounts[0];
+        showMainApp();
+      }
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function login() {
+  document.getElementById('login-status').textContent = 'Prijavljujem...';
+  try {
+    await msalInstance.loginRedirect({ scopes });
+  } catch(e) {
+    document.getElementById('login-status').textContent = 'Greška pri prijavi. Pokušajte ponovo.';
+  }
+}
+
+async function getToken() {
+  const req = { scopes, account: currentUser };
+  try {
+    const resp = await msalInstance.acquireTokenSilent(req);
+    return resp.accessToken;
+  } catch(e) {
+    const resp = await msalInstance.acquireTokenPopup(req);
+    return resp.accessToken;
+  }
+}
+
+async function apiCall(url, method='GET', body=null) {
+  const token = await getToken();
+  const opts = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API error ${res.status}: ${err}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+async function getSiteId() {
+  if (siteId) return siteId;
+  const host = 'tecorconsulting.sharepoint.com';
+  const path = '/sites/TecorInterniProcesi';
+  const data = await apiCall(`https://graph.microsoft.com/v1.0/sites/${host}:${path}`);
+  siteId = data.id;
+  return siteId;
+}
+
+async function getListId(listName) {
+  if (listsCache[listName]) return listsCache[listName];
+  const sid = await getSiteId();
+  const data = await apiCall(`https://graph.microsoft.com/v1.0/sites/${sid}/lists?$filter=displayName eq '${encodeURIComponent(listName)}'`);
+  if (!data.value.length) throw new Error(`Lista '${listName}' nije pronađena`);
+  listsCache[listName] = data.value[0].id;
+  return listsCache[listName];
+}
+
+async function getItems(listName, filter='', select='') {
+  const sid = await getSiteId();
+  const lid = await getListId(listName);
+  let url = `https://graph.microsoft.com/v1.0/sites/${sid}/lists/${lid}/items?expand=fields`;
+  if (filter) url += `&$filter=${filter}`;
+  if (select) url += `&$select=${select}`;
+  url += '&$top=500';
+  const data = await apiCall(url);
+  return data.value.map(i => ({ id: i.id, ...i.fields }));
+}
+
+async function createItem(listName, fields) {
+  const sid = await getSiteId();
+  const lid = await getListId(listName);
+  return apiCall(`https://graph.microsoft.com/v1.0/sites/${sid}/lists/${lid}/items`, 'POST', { fields });
+}
+
+async function updateItem(listName, itemId, fields) {
+  const sid = await getSiteId();
+  const lid = await getListId(listName);
+  return apiCall(`https://graph.microsoft.com/v1.0/sites/${sid}/lists/${lid}/items/${itemId}/fields`, 'PATCH', fields);
+}
+
+async function deleteItem(listName, itemId) {
+  const sid = await getSiteId();
+  const lid = await getListId(listName);
+  return apiCall(`https://graph.microsoft.com/v1.0/sites/${sid}/lists/${lid}/items/${itemId}`, 'DELETE');
+}
+
+// ── SHOW MAIN APP ──
+async function showMainApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+
+  const name = currentUser.name || currentUser.username;
+  document.getElementById('user-name').textContent = name.split(' ')[0];
+
+  await loadReferenceData();
+  await loadNalozi();
+  loadHomeStats();
+}
+
+async function loadReferenceData() {
+  try {
+    [zaposleniData, vozilaData] = await Promise.all([
+      getItems(CONFIG.lists.zaposleni),
+      getItems(CONFIG.lists.vozila)
+    ]);
+
+    const svrhaData = await getItems(CONFIG.lists.svrha);
+    const sredstvaData = await getItems(CONFIG.lists.sredstva);
+
+    // Populate selects
+    populateSelect('f-nosilac', zaposleniData, 'Title', 'id');
+    ['f-putnik2','f-putnik3','f-putnik4','f-putnik5'].forEach(id => {
+      populateSelect(id, zaposleniData, 'Title', 'id', true);
+    });
+    populateSelect('f-vozilo', vozilaData, 'Vozilo', 'id');
+    populateSelect('f-svrha', svrhaData, 'Title', 'id');
+
+    const sNames = sredstvaData.map(s => s.Title || s['Sredstva_x0020_pla_x0107_anja'] || s.field_1);
+    ['f-nacin-gorivo','f-nacin-putarina','f-nacin-smestaj','f-nacin-hrana'].forEach(id => {
+      populateSelectRaw(id, sNames);
+    });
+
+    generateBrojNaloga();
+  } catch(e) {
+    console.error('Greška pri učitavanju referentnih podataka:', e);
+  }
+}
+
+function populateSelect(selectId, data, labelField, valueField, withEmpty=false) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="">—</option>`;
+  if (withEmpty) sel.innerHTML = `<option value="-">—</option>`;
+  data.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item[valueField] || item.id;
+    opt.textContent = item[labelField] || item.Title || item.id;
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+function populateSelectRaw(selectId, names) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = `<option value="">—</option>`;
+  names.forEach(n => {
+    if (!n) return;
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadNalozi() {
+  try {
+    naloziData = await getItems(CONFIG.lists.nalozi);
+    naloziData.sort((a,b) => new Date(b.DatumPolaska||b.Created) - new Date(a.DatumPolaska||a.Created));
+    renderRecentList();
+    renderAllList();
+    renderStats();
+  } catch(e) {
+    console.error('Greška pri učitavanju naloga:', e);
+    document.getElementById('recent-list').innerHTML = `<div class="empty"><div class="empty-title">Greška pri učitavanju</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function loadHomeStats() {
+  const now = new Date();
+  const thisMonth = naloziData.filter(n => {
+    const d = new Date(n.DatumPolaska || n.Created);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const thisYear = naloziData.filter(n => {
+    const d = new Date(n.DatumPolaska || n.Created);
+    return d.getFullYear() === now.getFullYear();
+  });
+  const kmMonth = thisMonth.reduce((s,n) => s + (Number(n['Pre_x0111_enokilometara']||n.PredenoKilometara||0)), 0);
+  document.getElementById('stat-km-month').textContent = kmMonth.toLocaleString('sr-RS');
+  document.getElementById('stat-km-sub').textContent = `${thisMonth.length} naloga`;
+  document.getElementById('stat-count-year').textContent = thisYear.length;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function getNalogDisplayName(n) {
+  return n['Broj_x0020_naloga'] || n.BrojNaloga || n.Title || `#${n.id}`;
+}
+
+function getNalogNasilac(n) {
+  return n['Nosilac_x0020_putnog_x0020_nalo'] || n.NosilacPutnogNaloga || n['NosilacPutnogNaloga@odata.navigationLinkUrl'] || '—';
+}
+
+function getNalogKm(n) {
+  return Number(n['Pre_x0111_enokilometara'] || n.PredenoKilometara || 0);
+}
+
+function renderRecentList() {
+  const el = document.getElementById('recent-list');
+  const recent = naloziData.slice(0, 8);
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Nema naloga</div><div class="empty-sub">Dodajte prvi putni nalog</div></div>`;
+    return;
+  }
+  el.innerHTML = recent.map(n => nalogCard(n)).join('');
+}
+
+function renderAllList(query='') {
+  const el = document.getElementById('all-list');
+  const filtered = query
+    ? naloziData.filter(n => {
+        const s = `${getNalogNasilac(n)} ${n.Destinacija||''} ${getNalogDisplayName(n)}`.toLowerCase();
+        return s.includes(query.toLowerCase());
+      })
+    : naloziData;
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nema rezultata</div><div class="empty-sub">Promenite termin pretrage</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(n => nalogCard(n)).join('');
+}
+
+function nalogCard(n) {
+  const km = getNalogKm(n);
+  const broj = getNalogDisplayName(n);
+  const nosilac = getNalogNasilac(n);
+  const dest = n.Destinacija || '—';
+  const datum = formatDate(n.DatumPolaska);
+  const isGorivo = n['SIPANJE_x0020_GORIVA_x0020_BEZ_'] || n['SIPANJEGORIVABEZPUTAValue'] || false;
+  return `<div class="list-item" onclick="showDetalji('${n.id}')">
+    <div class="list-item-icon">${isGorivo ? '⛽' : '🚗'}</div>
+    <div class="list-item-body">
+      <div class="list-item-title">${broj} · ${dest}</div>
+      <div class="list-item-sub">${nosilac} · ${datum}</div>
+    </div>
+    <div class="list-item-right">
+      <div class="list-item-value">${km > 0 ? km+' km' : '⛽'}</div>
+    </div>
+  </div>`;
+}
+
+function filterNalozi(q) {
+  renderAllList(q);
+}
+
+function renderStats() {
+  const now = new Date();
+  const filtered = naloziData.filter(n => {
+    const d = new Date(n.DatumPolaska || n.Created);
+    if (statsMode === 'mesec') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return d.getFullYear() === now.getFullYear();
+  });
+
+  // KM po zaposlenom
+  const kmZap = {};
+  filtered.forEach(n => {
+    const k = getNalogNasilac(n) || 'Nepoznat';
+    kmZap[k] = (kmZap[k]||0) + getNalogKm(n);
+  });
+  renderStatTable('stats-zaposleni', kmZap, 'km');
+
+  // KM po vozilu
+  const kmVoz = {};
+  filtered.forEach(n => {
+    const v = n.Vozilo || n['Vozilo@odata.navigationLinkUrl'] || '—';
+    if (v && v !== '—') kmVoz[v] = (kmVoz[v]||0) + getNalogKm(n);
+  });
+  renderStatTable('stats-vozila', kmVoz, 'km');
+
+  // Gorivo po zaposlenom
+  const gorZap = {};
+  filtered.forEach(n => {
+    const k = getNalogNasilac(n) || 'Nepoznat';
+    const v = Number(n['Tro_x0161_kovigoriva']||n.TroskoviGoriva||n.Placeno||0);
+    gorZap[k] = (gorZap[k]||0) + v;
+  });
+  renderStatTable('stats-gorivo', gorZap, 'RSD');
+}
+
+function renderStatTable(elId, data, unit) {
+  const el = document.getElementById(elId);
+  const sorted = Object.entries(data).sort((a,b) => b[1]-a[1]);
+  if (!sorted.length) {
+    el.innerHTML = `<div class="empty" style="padding:16px"><div class="empty-sub">Nema podataka za ovaj period</div></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="stats-table-header" style="grid-template-columns:1fr auto">
+      <span>Naziv</span><span>Ukupno</span>
+    </div>
+    ${sorted.map(([k,v]) => `
+      <div class="stats-table-row" style="grid-template-columns:1fr auto">
+        <span class="stats-col-name">${k}</span>
+        <span class="stats-col-val">${v.toLocaleString('sr-RS')} ${unit}</span>
+      </div>`).join('')}`;
+}
+
+function switchTab(mode, el) {
+  statsMode = mode;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderStats();
+}
+
+// ── SCREEN NAV ──
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const map = {'home':'screen-home','pregled':'screen-pregled','novi-nalog':'screen-novi-nalog','statistika':'screen-statistika','detalji':'screen-detalji'};
+  const navMap = {'home':'nav-home','pregled':'nav-pregled','novi-nalog':'nav-novi','statistika':'nav-statistika'};
+
+  const screenId = map[name];
+  if (screenId) document.getElementById(screenId).classList.add('active');
+
+  const navId = navMap[name];
+  if (navId) document.getElementById(navId).classList.add('active');
+
+  if (name === 'statistika') renderStats();
+  if (name === 'pregled') renderAllList(document.getElementById('search-input')?.value || '');
+  if (name === 'novi-nalog') { resetForm(); }
+}
+
+// ── FORM ──
+let gorivoToggle = false;
+
+function toggleGorivo() {
+  gorivoToggle = !gorivoToggle;
+  const sw = document.getElementById('gorivo-switch');
+  const card = document.getElementById('gorivo-toggle');
+  const banner = document.getElementById('fuel-banner');
+  sw.classList.toggle('on', gorivoToggle);
+  card.classList.toggle('active', gorivoToggle);
+  banner.style.display = gorivoToggle ? 'flex' : 'none';
+
+  document.querySelectorAll('.trip-only').forEach(el => {
+    el.style.display = gorivoToggle ? 'none' : '';
+  });
+
+  // Broj naloga
+  document.getElementById('broj-naloga-display').textContent = gorivoToggle ? '0' : generateBrojNaloga();
+}
+
+function generateBrojNaloga() {
+  const max = naloziData.reduce((m, n) => {
+    const b = parseInt(n['Broj_x0020_naloga'] || n.BrojNaloga || n.Title || '0');
+    return isNaN(b) ? m : Math.max(m, b);
+  }, 0);
+  const next = String(max + 1);
+  document.getElementById('broj-naloga-display').textContent = next;
+  return next;
+}
+
+function autoFillVozilo() {
+  const nosilacId = document.getElementById('f-nosilac').value;
+  const zaposleni = zaposleniData.find(z => z.id === nosilacId);
+  if (zaposleni && zaposleni['Vlasnik_x0020_vozila'] || zaposleni?.VlasnikVozila) {
+    const vozTitle = zaposleni['Vlasnik_x0020_vozila'] || zaposleni.VlasnikVozila;
+    const vozilo = vozilaData.find(v => v.Vozilo === vozTitle || v.Title === vozTitle);
+    if (vozilo) document.getElementById('f-vozilo').value = vozilo.id;
+  }
+}
+
+function calcPlaceno() {
+  const s = parseFloat(document.getElementById('f-sipano').value) || 0;
+  const c = parseFloat(document.getElementById('f-cena-goriva').value) || 0;
+  document.getElementById('calc-placeno').textContent = (s*c).toLocaleString('sr-RS', {minimumFractionDigits:2}) + ' RSD';
+}
+
+function calcPotrosnja() {
+  const km = parseFloat(document.getElementById('f-km').value) || 0;
+  const voziloId = document.getElementById('f-vozilo').value;
+  const vozilo = vozilaData.find(v => v.id === voziloId);
+  const pp = vozilo ? (parseFloat(vozilo['Prose_x010d_napotrošnja'] || vozilo.ProsecnaPotrošnja || vozilo.ProsecnaPotrosnja || 0)) : 0;
+  const potrosnja = km * pp / 100;
+  document.getElementById('calc-potrosnja').textContent = potrosnja.toLocaleString('sr-RS', {minimumFractionDigits:2}) + ' L';
+}
+
+function resetForm() {
+  gorivoToggle = false;
+  document.getElementById('gorivo-switch').classList.remove('on');
+  document.getElementById('gorivo-toggle').classList.remove('active');
+  document.getElementById('fuel-banner').style.display = 'none';
+  document.querySelectorAll('.trip-only').forEach(el => el.style.display = '');
+  document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el => {
+    if (el.type === 'date') el.value = new Date().toISOString().split('T')[0];
+    else el.value = '';
+  });
+  document.getElementById('calc-placeno').textContent = '0.00 RSD';
+  document.getElementById('calc-potrosnja').textContent = '0.00 L';
+  currentNalogId = null;
+  document.querySelector('#screen-novi-nalog .header-title').textContent = 'Novi nalog';
+  generateBrojNaloga();
+}
+
+async function saveNalog() {
+  const btn = document.querySelector('#screen-novi-nalog .header-action');
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  const datumPolaska = document.getElementById('f-datum-polaska').value;
+  const nosilac = document.getElementById('f-nosilac').value;
+
+  if (!datumPolaska) { showToast('Datum polaska je obavezan!', 'error'); btn.textContent='Sačuvaj'; btn.disabled=false; return; }
+  if (!noilac && !nosilac) { /* ok */ }
+
+  const sipano = parseFloat(document.getElementById('f-sipano').value) || 0;
+  const cenaGor = parseFloat(document.getElementById('f-cena-goriva').value) || 0;
+  const placeno = sipano * cenaGor;
+
+  const km = parseInt(document.getElementById('f-km').value) || 0;
+  const voziloId = document.getElementById('f-vozilo').value;
+  const vozilo = vozilaData.find(v => v.id === voziloId);
+  const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotrošnja']||vozilo.ProsecnaPotrošnja||0) : 0;
+  const potrosnja = km * pp / 100;
+
+  const brojNaloga = gorivoToggle ? '0' : document.getElementById('broj-naloga-display').textContent;
+
+  const zapIme = zaposleniData.find(z => z.id === nosilac)?.Title || nosilac;
+
+  const fields = {
+    'Broj_x0020_naloga': brojNaloga,
+    'SIPANJE_x0020_GORIVA_x0020_BEZ_': gorivoToggle,
+    'DatumPolaska': datumPolaska ? new Date(datumPolaska).toISOString() : null,
+    'VremePolaska': document.getElementById('f-vreme-polaska').value || '-',
+    'DatumPovratka': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
+    'VremePovratka': document.getElementById('f-vreme-povratka').value || '-',
+    'NosilacPutnogNaloga': zapIme || '-',
+    'Vozilo': vozilo?.Vozilo || '-',
+    'Putnik2': document.getElementById('f-putnik2').value || '-',
+    'Putnik3': document.getElementById('f-putnik3').value || '-',
+    'Putnik4': document.getElementById('f-putnik4').value || '-',
+    'Putnik5': document.getElementById('f-putnik5').value || '-',
+    'Klijent': document.getElementById('f-klijent').value || '-',
+    'Destinacija': document.getElementById('f-destinacija').value || '-',
+    'SvrhaPuta': document.getElementById('f-svrha').value || '-',
+    'Izvestaj': document.getElementById('f-izvestaj').value || '-',
+    'NacinPlacanjaGoriva': document.getElementById('f-nacin-gorivo').value || '-',
+    'SipanoLitara': sipano,
+    'CenaGoriva': cenaGor,
+    'TroskoviGoriva': placeno,
+    'PredenoKilometara': km,
+    'PotrosenоGoriva': potrosnja,
+    'NacinPlacanjaPutarine': document.getElementById('f-nacin-putarina').value || '-',
+    'IznosPlaćenePutarine': parseFloat(document.getElementById('f-putarina').value)||0,
+    'NacinPlacanjaSmestaja': document.getElementById('f-nacin-smestaj').value || '-',
+    'CenaSmestaja': parseFloat(document.getElementById('f-smestaj').value)||0,
+    'NacinPlacanjaHrane': document.getElementById('f-nacin-hrana').value || '-',
+    'TroskoviHrane': parseFloat(document.getElementById('f-hrana').value)||0,
+    'NapomeneIkomentari': document.getElementById('f-napomena').value || '-',
+  };
+
+  try {
+    if (currentNalogId) {
+      await updateItem(CONFIG.lists.nalozi, currentNalogId, fields);
+      showToast('Nalog izmenjen ✓', 'success');
+    } else {
+      await createItem(CONFIG.lists.nalozi, fields);
+      showToast('Nalog sačuvan ✓', 'success');
+    }
+    await loadNalozi();
+    loadHomeStats();
+    showScreen('home');
+  } catch(e) {
+    console.error(e);
+    showToast('Greška pri čuvanju: ' + e.message, 'error');
+  }
+
+  btn.textContent = 'Sačuvaj'; btn.disabled = false;
+}
+
+// ── DETALJI ──
+function showDetalji(id) {
+  currentNalogId = id;
+  const n = naloziData.find(x => x.id === id);
+  if (!n) return;
+  document.getElementById('detail-title').textContent = getNalogDisplayName(n);
+
+  const sections = [
+    { title: 'Osnovno', rows: [
+      ['Broj naloga', getNalogDisplayName(n)],
+      ['Datum polaska', formatDate(n.DatumPolaska)],
+      ['Datum povratka', formatDate(n.DatumPovratka)],
+      ['Nosilac', getNalogNasilac(n)],
+      ['Vozilo', n.Vozilo || '—'],
+      ['Destinacija', n.Destinacija || '—'],
+      ['Klijent', n.Klijent || '—'],
+      ['Svrha', n.SvrhaPuta || '—'],
+    ]},
+    { title: 'Gorivo', rows: [
+      ['Sipano', (n.SipanoLitara||0) + ' L'],
+      ['Cena/L', (n.CenaGoriva||0) + ' RSD'],
+      ['Troškovi goriva', (n.TroskoviGoriva||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Način plaćanja', n.NacinPlacanjaGoriva || '—'],
+    ]},
+    { title: 'Kilometraža', rows: [
+      ['Pređeno km', (n.PredenoKilometara||0) + ' km'],
+      ['Potrošeno goriva', (n['PotrosenоGoriva']||0).toFixed(2) + ' L'],
+    ]},
+    { title: 'Ostali troškovi', rows: [
+      ['Putarina', (n.IznosPlaćenePutarine||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Smeštaj', (n.CenaSmestaja||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Hrana', (n.TroskoviHrane||0).toLocaleString('sr-RS') + ' RSD'],
+    ]},
+  ];
+
+  document.getElementById('detail-content').innerHTML = sections.map(s => `
+    <div class="detail-section">
+      <div class="detail-section-title">${s.title}</div>
+      ${s.rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v||'—'}</span></div>`).join('')}
+    </div>`).join('') + (n.NapomeneIkomentari && n.NapomeneIkomentari !== '-' ? `<div class="detail-section"><div class="detail-section-title">Napomena</div><div class="detail-row"><span class="detail-val" style="text-align:left">${n.NapomeneIkomentari}</span></div></div>` : '');
+
+  showScreen('detalji');
+}
+
+function editNalog() {
+  const n = naloziData.find(x => x.id === currentNalogId);
+  if (!n) return;
+  resetForm();
+  document.querySelector('#screen-novi-nalog .header-title').textContent = 'Izmeni nalog';
+
+  // populate fields
+  document.getElementById('broj-naloga-display').textContent = getNalogDisplayName(n);
+  if (n.DatumPolaska) document.getElementById('f-datum-polaska').value = n.DatumPolaska.split('T')[0];
+  if (n.VremePolaska) document.getElementById('f-vreme-polaska').value = n.VremePolaska;
+  if (n.DatumPovratka) document.getElementById('f-datum-povratka').value = n.DatumPovratka.split('T')[0];
+  if (n.VremePovratka) document.getElementById('f-vreme-povratka').value = n.VremePovratka;
+  document.getElementById('f-klijent').value = n.Klijent !== '-' ? (n.Klijent||'') : '';
+  document.getElementById('f-destinacija').value = n.Destinacija !== '-' ? (n.Destinacija||'') : '';
+  document.getElementById('f-sipano').value = n.SipanoLitara || '';
+  document.getElementById('f-cena-goriva').value = n.CenaGoriva || '';
+  document.getElementById('f-km').value = n.PredenoKilometara || '';
+  document.getElementById('f-putarina').value = n.IznosPlaćenePutarine || '';
+  document.getElementById('f-smestaj').value = n.CenaSmestaja || '';
+  document.getElementById('f-hrana').value = n.TroskoviHrane || '';
+  document.getElementById('f-napomena').value = n.NapomeneIkomentari !== '-' ? (n.NapomeneIkomentari||'') : '';
+  calcPlaceno(); calcPotrosnja();
+  showScreen('novi-nalog');
+}
+
+function deleteNalogConfirm() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-card">
+    <div class="modal-title">Obrišite nalog?</div>
+    <div class="modal-sub">Ova akcija je nepovratna.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Otkaži</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Obriši</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function confirmDelete() {
+  document.querySelector('.modal-overlay')?.remove();
+  try {
+    await deleteItem(CONFIG.lists.nalozi, currentNalogId);
+    showToast('Nalog obrisan', 'success');
+    await loadNalozi();
+    loadHomeStats();
+    showScreen('pregled');
+  } catch(e) {
+    showToast('Greška: ' + e.message, 'error');
+  }
+}
+
+// ── TOAST ──
+function showToast(msg, type='') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
