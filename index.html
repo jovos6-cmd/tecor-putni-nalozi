@@ -1092,6 +1092,7 @@ let siteId = null;
 let listsCache = {};
 let naloziData = [];
 let zaposleniData = [];
+let svrhaDataCache = [];
 let vozilaData = [];
 let currentNalogId = null;
 let gorivoMode = false;
@@ -1225,6 +1226,7 @@ async function loadReferenceData() {
     ]);
 
     const svrhaData = await getItems(CONFIG.lists.svrha);
+    svrhaDataCache = svrhaData;
     const sredstvaData = await getItems(CONFIG.lists.sredstva);
 
     // Populate selects
@@ -1587,15 +1589,15 @@ async function saveNalog() {
     'Vremepolaska': document.getElementById('f-vreme-polaska').value || '-',
     'Datumpovratla': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
     'Vremepovratka': document.getElementById('f-vreme-povratka').value || '-',
-    'NosilacputnognalogatLookupId': nosilac ? parseInt(nosilac) : null,
-    'VoziloLookupId': voziloId ? parseInt(voziloId) : null,
-    'Putnik2LookupId': document.getElementById('f-putnik2').value && document.getElementById('f-putnik2').value !== '-' ? parseInt(document.getElementById('f-putnik2').value) : null,
-    'Putnik3LookupId': document.getElementById('f-putnik3').value && document.getElementById('f-putnik3').value !== '-' ? parseInt(document.getElementById('f-putnik3').value) : null,
-    'Putnik4LookupId': document.getElementById('f-putnik4').value && document.getElementById('f-putnik4').value !== '-' ? parseInt(document.getElementById('f-putnik4').value) : null,
-    'Putnik5LookupId': document.getElementById('f-putnik5').value && document.getElementById('f-putnik5').value !== '-' ? parseInt(document.getElementById('f-putnik5').value) : null,
+    'Nosilacputnognaloga': zapIme || '-',
+    'Vozilo': vozilo?.Vozilo || '-',
+    'Putnik2': document.getElementById('f-putnik2').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik2').value)?.Title || '-') : '-',
+    'Putnik3': document.getElementById('f-putnik3').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik3').value)?.Title || '-') : '-',
+    'Putnik4': document.getElementById('f-putnik4').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik4').value)?.Title || '-') : '-',
+    'Putnik5': document.getElementById('f-putnik5').value ? (zaposleniData.find(z=>z.id===document.getElementById('f-putnik5').value)?.Title || '-') : '-',
     'Klijent': document.getElementById('f-klijent').value || '-',
     'Destinacija': document.getElementById('f-destinacija').value || '-',
-    'SvrhapuaLookupId': document.getElementById('f-svrha').value ? parseInt(document.getElementById('f-svrha').value) : null,
+    'Svrhaputa': document.getElementById('f-svrha').value ? (svrhaDataCache.find(s=>s.id===document.getElementById('f-svrha').value)?.Title || '-') : '-',
     'Izve_x0161_taj': document.getElementById('f-izvestaj').value || '-',
     'Na_x010d_inpla_x0107_anjagoriva': document.getElementById('f-nacin-gorivo').value || '-',
     'Sipanolitara': sipano,
@@ -1645,28 +1647,28 @@ function showDetalji(id) {
   const sections = [
     { title: 'Osnovno', rows: [
       ['Broj naloga', getNalogDisplayName(n)],
-      ['Datum polaska', formatDate(n.DatumPolaska)],
-      ['Datum povratka', formatDate(n.DatumPovratka)],
-      ['Nosilac', getNalogNasilac(n)],
+      ['Datum polaska', formatDate(n.Datumpolaska)],
+      ['Datum povratka', formatDate(n.Datumpovratla)],
+      ['Nosilac', n.Nosilacputnognaloga || '—'],
       ['Vozilo', n.Vozilo || '—'],
       ['Destinacija', n.Destinacija || '—'],
       ['Klijent', n.Klijent || '—'],
-      ['Svrha', n.SvrhaPuta || '—'],
+      ['Svrha', n.Svrhaputa || '—'],
     ]},
     { title: 'Gorivo', rows: [
-      ['Sipano', (n.SipanoLitara||0) + ' L'],
-      ['Cena/L', (n.CenaGoriva||0) + ' RSD'],
-      ['Troškovi goriva', (n.TroskoviGoriva||0).toLocaleString('sr-RS') + ' RSD'],
-      ['Način plaćanja', n.NacinPlacanjaGoriva || '—'],
+      ['Sipano', (n.Sipanolitara||0) + ' L'],
+      ['Cena/L', (n.Cenagoriva||0) + ' RSD'],
+      ['Troškovi goriva', (n['Tro_x0161_kovigoriva']||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Način plaćanja', n['Na_x010d_inpla_x0107_anjagoriva'] || '—'],
     ]},
     { title: 'Kilometraža', rows: [
-      ['Pređeno km', (n.PredenoKilometara||0) + ' km'],
-      ['Potrošeno goriva', (n['PotrosenоGoriva']||0).toFixed(2) + ' L'],
+      ['Pređeno km', (n['Pre_x0111_enokilometara']||0) + ' km'],
+      ['Potrošeno goriva', parseFloat(n['Potro_x0161_enogoriva']||0).toFixed(2) + ' L'],
     ]},
     { title: 'Ostali troškovi', rows: [
-      ['Putarina', (n.IznosPlaćenePutarine||0).toLocaleString('sr-RS') + ' RSD'],
-      ['Smeštaj', (n.CenaSmestaja||0).toLocaleString('sr-RS') + ' RSD'],
-      ['Hrana', (n.TroskoviHrane||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Putarina', (n['Iznospla_x0107_eneputarine']||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Smeštaj', (n['Cenasme_x0161_taja']||0).toLocaleString('sr-RS') + ' RSD'],
+      ['Hrana', (n['Tro_x0161_kovihrane']||0).toLocaleString('sr-RS') + ' RSD'],
     ]},
   ];
 
@@ -1674,7 +1676,7 @@ function showDetalji(id) {
     <div class="detail-section">
       <div class="detail-section-title">${s.title}</div>
       ${s.rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v||'—'}</span></div>`).join('')}
-    </div>`).join('') + (n.NapomeneIkomentari && n.NapomeneIkomentari !== '-' ? `<div class="detail-section"><div class="detail-section-title">Napomena</div><div class="detail-row"><span class="detail-val" style="text-align:left">${n.NapomeneIkomentari}</span></div></div>` : '');
+    </div>`).join('') + (n.Napomeneikomentari && n.Napomeneikomentari !== '-' ? `<div class="detail-section"><div class="detail-section-title">Napomena</div><div class="detail-row"><span class="detail-val" style="text-align:left">${n.Napomeneikomentari}</span></div></div>` : '');
 
   showScreen('detalji');
 }
@@ -1696,17 +1698,22 @@ function editNalog() {
   if (dpo) document.getElementById('f-datum-povratka').value = dpo.split('T')[0];
   if (n.Vremepovratka || n.VremePovratka) document.getElementById('f-vreme-povratka').value = n.Vremepovratka || n.VremePovratka;
 
-  // Lookup fields - use LookupId
-  const nosilacId = n.NosilacputnognalogatLookupId || n.NosilacputnognalognalogatLookupId;
-  if (nosilacId) document.getElementById('f-nosilac').value = String(nosilacId);
-  const voziloId = n.VoziloLookupId;
-  if (voziloId) { document.getElementById('f-vozilo').value = String(voziloId); }
-  const svrhId = n.SvrhapuaLookupId || n.SvrhaputtaLookupId;
-  if (svrhId) document.getElementById('f-svrha').value = String(svrhId);
-  const p2 = n.Putnik2LookupId; if (p2) document.getElementById('f-putnik2').value = String(p2);
-  const p3 = n.Putnik3LookupId; if (p3) document.getElementById('f-putnik3').value = String(p3);
-  const p4 = n.Putnik4LookupId; if (p4) document.getElementById('f-putnik4').value = String(p4);
-  const p5 = n.Putnik5LookupId; if (p5) document.getElementById('f-putnik5').value = String(p5);
+  // Populate lookup fields by matching text value to select options
+  const setSelectByText = (selId, text) => {
+    if (!text || text === '-') return;
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    Array.from(sel.options).forEach(opt => {
+      if (opt.textContent.trim() === text.trim()) sel.value = opt.value;
+    });
+  };
+  setSelectByText('f-nosilac', n.Nosilacputnognaloga);
+  setSelectByText('f-vozilo', n.Vozilo);
+  setSelectByText('f-svrha', n.Svrhaputa);
+  setSelectByText('f-putnik2', n.Putnik2);
+  setSelectByText('f-putnik3', n.Putnik3);
+  setSelectByText('f-putnik4', n.Putnik4);
+  setSelectByText('f-putnik5', n.Putnik5);
 
   // Text fields
   document.getElementById('f-klijent').value = (n.Klijent && n.Klijent !== '-') ? n.Klijent : '';
@@ -1766,15 +1773,6 @@ function showToast(msg, type='') {
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
-}
-
-// ── PDF LABEL ──
-function updatePdfLabel(input) {
-  const label = document.getElementById('pdf-label');
-  if (input.files && input.files[0]) {
-    label.textContent = input.files[0].name;
-    label.style.color = 'var(--accent2)';
-  }
 }
 
 // ── START ──
