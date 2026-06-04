@@ -721,14 +721,14 @@ html, body {
 
   <!-- LOGIN -->
   <div id="login-screen" style="position:relative;z-index:1">
-    <div class="login-logo" style="background:transparent;box-shadow:none">
-      <svg viewBox="0 0 200 160" width="120" height="96" xmlns="http://www.w3.org/2000/svg">
+    <div class="login-logo" style="background:transparent;box-shadow:none;width:150px;height:100px;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 180 120" width="150" height="100" xmlns="http://www.w3.org/2000/svg">
         <!-- Left blue triangle -->
-        <polygon points="10,140 70,140 40,60" fill="#1a5fa8"/>
-        <!-- Right blue triangle -->
-        <polygon points="60,140 120,140 90,60" fill="#1a5fa8" opacity="0.85"/>
-        <!-- Grey diamond -->
-        <polygon points="75,50 95,10 115,50 95,90" fill="#8899aa"/>
+        <polygon points="0,115 60,115 30,50" fill="#1b4f8c"/>
+        <!-- Right blue triangle (behind diamond, slightly right) -->
+        <polygon points="38,115 98,115 68,50" fill="#1b4f8c" opacity="0.80"/>
+        <!-- Grey diamond (overlapping both, centered) -->
+        <polygon points="58,0 80,35 58,70 36,35" fill="#9aa4ae"/>
       </svg>
     </div>
     <div>
@@ -1542,7 +1542,7 @@ function calcPotrosnja() {
   const voziloId = document.getElementById('f-vozilo').value;
   const vozilo = vozilaData.find(v => v.id === voziloId);
   // Try all possible SharePoint internal field names for 'Prosecna potrosnja'
-  const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotro_x0161_nja'] || 0) : 0;
+  const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotro_x0161_nja'] || vozilo['ProsecnaPotrošnja'] || 0) : 0;
   const potrosnja = km * pp / 100;
   document.getElementById('calc-potrosnja').textContent = potrosnja.toLocaleString('sr-RS', {minimumFractionDigits:2}) + ' L';
 }
@@ -1592,11 +1592,11 @@ async function saveNalog() {
   const fields = {
     'Title': brojNaloga,
     'Sipanjegoriva': gorivoToggle,
-    'DatumPolaska': datumPolaska ? new Date(datumPolaska).toISOString() : null,
-    'VremePolaska': document.getElementById('f-vreme-polaska').value || '-',
-    'DatumPovratka': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
-    'VremePovratka': document.getElementById('f-vreme-povratka').value || '-',
-    'NosilacPutnogNaloga': zapIme || '-',
+    'Datumpolaska': datumPolaska ? new Date(datumPolaska).toISOString() : null,
+    'Vremepolaska': document.getElementById('f-vreme-polaska').value || '-',
+    'Datumpovratla': !gorivoToggle && document.getElementById('f-datum-povratka').value ? new Date(document.getElementById('f-datum-povratka').value).toISOString() : null,
+    'Vremepovratka': document.getElementById('f-vreme-povratka').value || '-',
+    'Nosilacputnognaloga': zapIme || '-',
     'Vozilo': vozilo?.Vozilo || '-',
     'Putnik2': document.getElementById('f-putnik2').value || '-',
     'Putnik3': document.getElementById('f-putnik3').value || '-',
@@ -1604,21 +1604,21 @@ async function saveNalog() {
     'Putnik5': document.getElementById('f-putnik5').value || '-',
     'Klijent': document.getElementById('f-klijent').value || '-',
     'Destinacija': document.getElementById('f-destinacija').value || '-',
-    'SvrhaPuta': document.getElementById('f-svrha').value || '-',
-    'Izvestaj': document.getElementById('f-izvestaj').value || '-',
-    'NacinPlacanjaGoriva': document.getElementById('f-nacin-gorivo').value || '-',
-    'SipanoLitara': sipano,
-    'CenaGoriva': cenaGor,
-    'TroskoviGoriva': placeno,
-    'PredenoKilometara': km,
-    'PotrosenоGoriva': potrosnja,
-    'NacinPlacanjaPutarine': document.getElementById('f-nacin-putarina').value || '-',
-    'IznosPlaćenePutarine': parseFloat(document.getElementById('f-putarina').value)||0,
-    'NacinPlacanjaSmestaja': document.getElementById('f-nacin-smestaj').value || '-',
-    'CenaSmestaja': parseFloat(document.getElementById('f-smestaj').value)||0,
-    'NacinPlacanjaHrane': document.getElementById('f-nacin-hrana').value || '-',
-    'TroskoviHrane': parseFloat(document.getElementById('f-hrana').value)||0,
-    'NapomeneIkomentari': document.getElementById('f-napomena').value || '-',
+    'Svrhaputa': document.getElementById('f-svrha').value || '-',
+    'Izve_x0161_taj': document.getElementById('f-izvestaj').value || '-',
+    'Na_x010d_inpla_x0107_anjagoriva': document.getElementById('f-nacin-gorivo').value || '-',
+    'Sipanolitara': sipano,
+    'Cenagoriva': cenaGor,
+    'Tro_x0161_kovigoriva': placeno,
+    'Pre_x0111_enokilometara': km,
+    'Potro_x0161_enogoriva': potrosnja,
+    'Na_x010d_inpla_x0107_anjaputarin': document.getElementById('f-nacin-putarina').value || '-',
+    'Iznospla_x0107_eneputarine': parseFloat(document.getElementById('f-putarina').value)||0,
+    'Na_x010d_inpla_x0107_anjasme_x01': document.getElementById('f-nacin-smestaj').value || '-',
+    'Cenasme_x0161_taja': parseFloat(document.getElementById('f-smestaj').value)||0,
+    'Na_x010d_inpla_x0107_anjahrane': document.getElementById('f-nacin-hrana').value || '-',
+    'Tro_x0161_kovihrane': parseFloat(document.getElementById('f-hrana').value)||0,
+    'Napomeneikomentari': document.getElementById('f-napomena').value || '-',
   };
 
   try {
