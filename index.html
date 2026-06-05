@@ -1442,7 +1442,6 @@ async function saveNalog() {
   const placeno = sipano * cenaGor;
 
   const km = parseInt(document.getElementById('f-km').value) || 0;
-  const pp = vozilo ? parseFloat(vozilo['Prose_x010d_napotrošnja']||vozilo.ProsecnaPotrošnja||0) : 0;
   const potrosnja = km * pp / 100;
 
   const brojNaloga = gorivoToggle ? '0' : document.getElementById('broj-naloga-display').textContent;
