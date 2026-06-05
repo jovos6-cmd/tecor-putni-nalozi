@@ -1442,8 +1442,6 @@ async function saveNalog() {
   const placeno = sipano * cenaGor;
 
   const km = parseInt(document.getElementById('f-km').value) || 0;
-  const potrosnja = km * pp / 100;
-
   const brojNaloga = gorivoToggle ? '0' : document.getElementById('broj-naloga-display').textContent;
 
   const zapIme = zaposleniData.find(z => z.id === nosilac)?.Title || nosilac;
